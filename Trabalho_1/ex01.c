@@ -19,49 +19,63 @@
 
 int turn;						/* De quem é a vez? */
 int interested[N];				/* Todos os valores inicialmente em 0 */
+FILE *file;
+
+void ler_arquivo(){
+	file = fopen("texto.txt", "r");	
+	if(file == NULL){
+		printf("Aquivo não pode ser aberto\n");
+		exit (0);
+	}	
+	fscanf(file, "%i %i %i", &interested[0], &interested[1], &turn);
+	fclose(file);
+	printf("%i %i %i\n", interested[0], interested[1], turn);
+}
+
+void salvar_arquivo(){
+	file = fopen("texto.txt", "w");	
+	fprintf(file,"%i %i %i", interested[0], interested[1], turn);
+	fclose(file);
+	printf("%i %i %i\n", interested[0], interested[1], turn);
+}
 
 void enter_region(int process)	/* processo 0 ou 1 */
 {	
-	int other;					/* número de outro processo */	
-	other = 1 - process;
+	int other = 1 - process;	/* número do outro processo */
 	
-	FILE *file;
-	file = fopen("texto.txt", "r");
-	
-	if(file == NULL){
-		printf("Aquivo não pode ser aberto\n");
-		return 0;
-	}
-	
-	
+	ler_arquivo();	
 	
 	interested[process] = TRUE;
 	turn = process;
-	while(turn == process && interested[other] == TRUE);
+	
+	salvar_arquivo();
+	
+	while(turn == process && interested[other] == TRUE);	
 }
 
 void leave_region(int process){
 	interested[process] = FALSE;
+	FILE *file;
+	salvar_arquivo();
 }
 
 int main(void){
 	pid_t pid;
-
 	if((pid = fork()) < 0){
 		perror("fork");
 		exit(1);
 	}
 	if(pid == 0){
-		printf("Eu sou filho\n");
+		printf("Process 0\n");
 		enter_region(0);
 		leave_region(0);
-		printf("Eu sou filho e terminei.\n");		
+		printf("Process 0 finalizado.\n");		
 	}
 	else{
-		printf("Eu sou pai\n");		
+		printf("Process 1\n");		
 		enter_region(1);
 		leave_region(1);
-		printf("Eu sou pai e terminei.\n");	
+		printf("Process 1 finalizado.\n");	
 	}
 	return EXIT_SUCCESS;
 }
