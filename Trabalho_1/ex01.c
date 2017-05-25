@@ -10,8 +10,9 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <stdlib.h>				/* function exit() */
+#include <unistd.h>				/* function fork() */
+
 
 #define FALSE 0
 #define TRUE 1
@@ -20,6 +21,32 @@
 int turn;						/* De quem é a vez? */
 int interested[N];				/* Todos os valores inicialmente em 0 */
 FILE *file;
+
+void ler_arquivo();
+void salvar_arquivo();
+void enter_region(int process);
+void leave_region(int process);
+
+int main(void){
+	pid_t pid;
+	if((pid = fork()) < 0){
+		perror("fork");
+		exit(1);
+	}
+	else if(pid == 0){
+		printf("Process 0\n");
+		enter_region(0);
+		leave_region(0);
+		printf("Process 0 finalizado.\n");		
+	}
+	else{
+		printf("Process 1\n");		
+		enter_region(1);
+		leave_region(1);
+		printf("Process 1 finalizado.\n");	
+	}
+	return EXIT_SUCCESS;
+}
 
 void ler_arquivo(){
 	file = fopen("texto.txt", "r");	
@@ -59,23 +86,3 @@ void leave_region(int process){
 	salvar_arquivo();
 }
 
-int main(void){
-	pid_t pid;
-	if((pid = fork()) < 0){
-		perror("fork");
-		exit(1);
-	}
-	if(pid == 0){
-		printf("Process 0\n");
-		enter_region(0);
-		leave_region(0);
-		printf("Process 0 finalizado.\n");		
-	}
-	else{
-		printf("Process 1\n");		
-		enter_region(1);
-		leave_region(1);
-		printf("Process 1 finalizado.\n");	
-	}
-	return EXIT_SUCCESS;
-}
